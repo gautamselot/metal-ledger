@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import type { AppDB } from '@/types';
+import type { AppDB, Unit } from '@/types';
 import { daysIn, MONTHS } from './reverseCalculator';
 import { downloadBlob } from './storage';
 
@@ -7,13 +7,14 @@ const thin = { style: 'thin' as const, color: { argb: 'FF444444' } };
 const box = { top: thin, left: thin, bottom: thin, right: thin };
 const headFill = { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF1F2833' } };
 
-export async function exportMuster(db: AppDB, month: number, year: number) {
+export async function exportMuster(db: AppDB, month: number, year: number, unit: Unit) {
   const N = daysIn(month, year);
   const rows = db.payroll
     .filter((r) => r.month === month && r.year === year)
     .map((r) => ({ r, e: db.employees.find((e) => e.id === r.employeeId) }))
     .filter((x): x is { r: (typeof x)['r']; e: NonNullable<(typeof x)['e']> } => !!x.e)
-    .sort((a, b) => (a.e.department ?? '').localeCompare(b.e.department ?? '') || a.e.empCode.localeCompare(b.e.empCode, undefined, { numeric: true }));
+        .filter((x) => x.e.unit === unit)
+    .sort((a, b) => a.e.empCode.localeCompare(b.e.empCode, undefined, { numeric: true }));
   if (!rows.length) throw new Error('Nothing to export. Generate payroll for this month first.');
 
   const s = db.settings;
@@ -50,7 +51,7 @@ export async function exportMuster(db: AppDB, month: number, year: number) {
   };
   title(1, s.companyName, 16, true);
   title(2, s.address || ' ', 10, false);
-  title(3, `Attendance & Wage Register - ${MONTHS[month - 1]} ${year}`, 12, true);
+    title(3, `Attendance & Wage Register - ${MONTHS[month - 1]} ${year} (${unit})`, 12, true);
 
   if (s.logoBase64) {
     try {
@@ -76,7 +77,7 @@ export async function exportMuster(db: AppDB, month: number, year: number) {
 
   rows.forEach(({ r, e }, i) => {
     const row = ws.addRow([
-      i + 1, e.empCode, e.name, e.department ?? '', r.dailyRate,
+      i + 1, e.empCode, e.name, e.unit ?? '', r.dailyRate,
       ...r.days.map((d) => d.status),
       r.presentDays, r.absentDays, r.otPay, r.targetPayout, '',
     ]);
@@ -118,11 +119,11 @@ export async function exportMuster(db: AppDB, month: number, year: number) {
     c.border = box;
   });
   rows.forEach(({ r, e }, i) => {
-    const row = bs.addRow([i + 1, e.empCode, e.name, e.department ?? '', e.accNo ?? '', e.ifsc ?? '', e.aadhaar ?? '', r.targetPayout]);
+    const row = bs.addRow([i + 1, e.empCode, e.name, e.unit ?? '', e.accNo ?? '', e.ifsc ?? '', e.aadhaar ?? '', r.targetPayout]);
     row.eachCell({ includeEmpty: true }, (c) => { c.border = box; });
     row.getCell(8).numFmt = '#,##0';
   });
 
   const buf = await wb.xlsx.writeBuffer();
-  downloadBlob(`Payroll_${MONTHS[month - 1]}_${year}.xlsx`, new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+   downloadBlob(`Payroll_${unit.replace(' ', '')}_${MONTHS[month - 1]}_${year}.xlsx`, new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
 }

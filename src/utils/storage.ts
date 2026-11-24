@@ -1,12 +1,12 @@
-import type { AppDB, PayrollRecord } from '@/types';
+import type { AppDB, PayrollRecord, Unit } from '@/types';
 
 const KEY = 'payroll.db';
 const OLD_KEY = 'metalledger.db';
 
 export const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
-const PLANTS: Record<string, string> = { bhalwani: 'Plant 1', supa: 'Plant 2' };
-export const plantName = (s?: string) => PLANTS[(s ?? '').trim().toLowerCase()] ?? (s ?? '').trim();
+const UNIT_MAP: Record<string, Unit> = { bhalwani: 'Plant 1', supa: 'Plant 2', 'plant 1': 'Plant 1', 'plant 2': 'Plant 2' };
+export const unitName = (s?: string): Unit => UNIT_MAP[(s ?? '').trim().toLowerCase()] ?? 'Plant 1';
 
 export const defaultDB = (): AppDB => ({
   version: 2,
@@ -22,7 +22,10 @@ function normalize(d: AppDB): AppDB {
     ...d,
     version: 2,
     settings: { ...base.settings, ...d.settings },
-    employees: d.employees.map((e) => ({ ...e, department: plantName(e.department) })),
+        employees: d.employees.map((e) => {
+      const { department, ...x } = e as typeof e & { department?: string };
+      return { ...x, unit: unitName(x.unit ?? department) };
+    }),
     payroll: d.payroll.map((r) => {
       const { adjustment = 0, ...x } = r as PayrollRecord & { adjustment?: number };
       return { ...x, otPay: x.otPay + adjustment };

@@ -2,13 +2,15 @@ import type { Dispatch, SetStateAction } from 'react';
 
 export type DayStatus = 'P' | 'A';
 export type OTMultiplier = 1 | 1.5 | 2;
+export const UNITS = ['Plant 1', 'Plant 2'] as const;
+export type Unit = (typeof UNITS)[number];
 
 export interface Employee {
   id: string;
   empCode: string;
   name: string;
   designation?: string;
-  department?: string; // Plant
+    unit: Unit;
   dailyRate: number;
   accNo?: string;
   ifsc?: string;
@@ -54,7 +56,7 @@ export interface AppDB {
 }
 
 export interface ImportedPayout {
-  empCode: string;
+    name: string;
   targetPayout: number;
 }
 

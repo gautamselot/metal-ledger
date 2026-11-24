@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { CalendarDays, FileSpreadsheet, Shuffle, Wand2, X } from 'lucide-react';
-import type { AppDB, Employee, ImportedPayout, OTMultiplier, PayrollRecord, SetDB } from '@/types';
+import type { AppDB, Employee, ImportedPayout, OTMultiplier, PayrollRecord, SetDB, Unit } from '@/types';
 import { generate, MONTHS } from '@/utils/reverseCalculator';
 import { exportMuster } from '@/utils/excelExporter';
 import type { Period } from '../layout/Header';
@@ -11,22 +11,21 @@ import DayEditorDrawer from './DayEditorDrawer';
 interface Draft { rate: string; target: string; mult: OTMultiplier }
 const inr = (n: number) => n.toLocaleString('en-IN');
 
-export default function PayrollGrid({ db, setDb, period }: { db: AppDB; setDb: SetDB; period: Period }) {
+export default function PayrollGrid({ db, setDb, period, unit }: { db: AppDB; setDb: SetDB; period: Period; unit: Unit }) {
   const { month, year } = period;
   const s = db.settings;
   const [draft, setDraft] = useState<Record<string, Draft>>({});
   const [q, setQ] = useState('');
-  const [plant, setPlant] = useState('');
   const [editId, setEditId] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
 
-  const plants = useMemo(() => [...new Set(db.employees.map((e) => e.department).filter((p): p is string => !!p))].sort(), [db.employees]);
+  const unitEmps = useMemo(() => db.employees.filter((e) => e.active && e.unit === unit), [db.employees, unit]);
   const emps = useMemo(
     () =>
-      db.employees
-        .filter((e) => e.active && (!plant || e.department === plant) && (e.name + e.empCode).toLowerCase().includes(q.toLowerCase()))
+      unitEmps
+        .filter((e) => (e.name + e.empCode).toLowerCase().includes(q.toLowerCase()))
         .sort((a, b) => a.empCode.localeCompare(b.empCode, undefined, { numeric: true })),
-    [db.employees, q, plant]
+    [unitEmps, q]
   );
   const recOf = (id: string) => db.payroll.find((r) => r.employeeId === id && r.month === month && r.year === year);
   const val = (e: Employee): Draft => {
@@ -56,10 +55,9 @@ export default function PayrollGrid({ db, setDb, period }: { db: AppDB; setDb: S
   };
 
   const genAll = () => {
-    const active = db.employees.filter((e) => e.active);
-    const recs = active.map((e) => gen(e)).filter((r): r is PayrollRecord => !!r);
+    const recs = unitEmps.map((e) => gen(e)).filter((r): r is PayrollRecord => !!r);
     commit(recs);
-    setMsg(`Generated ${recs.length} of ${active.length} active workers.`);
+    setMsg(`Generated ${recs.length} of ${unitEmps.length} active workers.`);
   };
 
   const applyBulk = (list: ImportedPayout[]) => {
@@ -67,8 +65,8 @@ export default function PayrollGrid({ db, setDb, period }: { db: AppDB; setDb: S
     const miss: string[] = [];
     let hit = 0;
     list.forEach((p) => {
-      const e = db.employees.find((x) => x.empCode === p.empCode);
-      if (!e) { miss.push(p.empCode); return; }
+      const e = unitEmps.find((x) => x.name.trim().toLowerCase() === p.name.trim().toLowerCase());
+      if (!e) { miss.push(p.name); return; }
       next[e.id] = { ...val(e), target: String(p.targetPayout) };
       hit++;
     });
@@ -86,10 +84,10 @@ export default function PayrollGrid({ db, setDb, period }: { db: AppDB; setDb: S
   };
 
   const exp = async () => {
-    try { await exportMuster(db, month, year); } catch (e) { setMsg((e as Error).message); }
+    try { await exportMuster(db, month, year, unit); } catch (e) { setMsg((e as Error).message); }
   };
 
-  const monthRecs = db.payroll.filter((r) => r.month === month && r.year === year && db.employees.some((e) => e.id === r.employeeId));
+  const monthRecs = db.payroll.filter((r) => r.month === month && r.year === year && db.employees.some((e) => e.id === r.employeeId && e.unit === unit));
   const totalPay = monthRecs.reduce((a, r) => a + r.targetPayout, 0);
   const editRec = editId ? db.payroll.find((r) => r.id === editId) : undefined;
   const editEmp = editRec ? db.employees.find((e) => e.id === editRec.employeeId) : undefined;
@@ -97,13 +95,9 @@ export default function PayrollGrid({ db, setDb, period }: { db: AppDB; setDb: S
   return (
     <section>
       <div className="bar">
-        <h2>{MONTHS[month - 1]} {year} <span className="muted">{monthRecs.length} generated · ₹{inr(totalPay)}</span></h2>
+        <h2>{unit} · {MONTHS[month - 1]} {year} <span className="muted">{monthRecs.length} generated · ₹{inr(totalPay)}</span></h2>
         <div className="row">
           <input placeholder="Search name or code" value={q} onChange={(e) => setQ(e.target.value)} />
-          <select value={plant} onChange={(e) => setPlant(e.target.value)} aria-label="Plant">
-            <option value="">All plants</option>
-            {plants.map((p) => <option key={p}>{p}</option>)}
-          </select>
           <button className="btn primary" onClick={genAll}><Wand2 size={16} /> Generate all</button>
           <button className="btn" onClick={exp}><FileSpreadsheet size={16} /> Export Excel</button>
         </div>
@@ -116,7 +110,7 @@ export default function PayrollGrid({ db, setDb, period }: { db: AppDB; setDb: S
       <div className="tablewrap">
         <table className="grid">
           <thead>
-            <tr><th>Code</th><th>Name</th><th>Plant</th><th className="num">Daily rate</th><th className="num">Target payout</th><th>OT rate</th><th className="num">Present</th><th className="num">Absent</th><th className="num">OT pay</th><th /></tr>
+            <tr><th>Code</th><th>Name</th><th className="num">Daily rate</th><th className="num">Target payout</th><th>OT rate</th><th className="num">Present</th><th className="num">Absent</th><th className="num">OT pay</th><th /></tr>
           </thead>
           <tbody>
             {emps.map((e, i) => {
@@ -125,7 +119,6 @@ export default function PayrollGrid({ db, setDb, period }: { db: AppDB; setDb: S
                 <tr key={e.id} className={dirty ? 'dirty' : ''}>
                   <td>{e.empCode}</td>
                   <td>{e.name}</td>
-                  <td>{e.department}</td>
                   <td><input className="cell" type="number" data-c={`rate-${i}`} value={v.rate} onChange={(x) => setF(e, 'rate', x.target.value)} onKeyDown={(x) => nav(x, 'rate', i)} /></td>
                   <td><input className="cell" type="number" data-c={`target-${i}`} placeholder="0" value={v.target} onChange={(x) => setF(e, 'target', x.target.value)} onKeyDown={(x) => nav(x, 'target', i)} /></td>
                   <td>
@@ -144,7 +137,7 @@ export default function PayrollGrid({ db, setDb, period }: { db: AppDB; setDb: S
                 </tr>
               );
             })}
-            {!emps.length && <tr><td colSpan={10} className="empty">No active workers. Add them in the Employees tab.</td></tr>}
+            {!emps.length && <tr><td colSpan={9} className="empty">No active workers in {unit}. Add them in the Employees tab.</td></tr>}
           </tbody>
         </table>
       </div>
