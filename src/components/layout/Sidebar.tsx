@@ -1,20 +1,28 @@
-import { CalendarCheck, Settings, Users } from 'lucide-react';
-import type { AppSettings } from '@/types';
-import MetalLedgerLogo from './MetalLedgerLogo';
+import { CalendarCheck, Users } from 'lucide-react';
+import { UNITS } from '@/types';
+import type { Employee, Unit } from '@/types';
+import PayrollLogo from './PayrollLogo';
 
-export type Tab = 'payroll' | 'employees' | 'settings';
+export type Tab = 'payroll' | 'employees';
 const items = [
   { id: 'payroll', label: 'Payroll', Icon: CalendarCheck },
   { id: 'employees', label: 'Employees', Icon: Users },
-  { id: 'settings', label: 'Company settings', Icon: Settings },
 ] as const;
 
-export default function Sidebar({ tab, setTab, settings }: { tab: Tab; setTab: (t: Tab) => void; settings: AppSettings }) {
+export default function Sidebar({ tab, setTab, unit, setUnit, employees }: { tab: Tab; setTab: (t: Tab) => void; unit: Unit; setUnit: (u: Unit) => void; employees: Employee[] }) {
   return (
     <aside className="sidebar">
-      <div className="brand">
-        <MetalLedgerLogo size={38} />
-        <span>MetalLedger</span>
+            <div className="brand">
+        <PayrollLogo size={38} />
+        <span>Payroll</span>
+      </div>
+      <div className="units" role="group" aria-label="Unit">
+        {UNITS.map((u) => (
+          <button key={u} className={unit === u ? 'unit on' : 'unit'} onClick={() => setUnit(u)}>
+            {u}
+            <small>{employees.filter((e) => e.unit === u && e.active).length} workers</small>
+          </button>
+        ))}
       </div>
       <nav>
         {items.map(({ id, label, Icon }) => (
@@ -23,13 +31,6 @@ export default function Sidebar({ tab, setTab, settings }: { tab: Tab; setTab: (
           </button>
         ))}
       </nav>
-      <div className="badge">
-        {settings.logoBase64 ? <img src={settings.logoBase64} alt="" /> : <div className="ph">{settings.companyName.slice(0, 1)}</div>}
-        <div>
-          <b>{settings.companyName}</b>
-          <small>{settings.address || 'Add address in settings'}</small>
-        </div>
-      </div>
     </aside>
   );
 }

@@ -23,7 +23,7 @@ export default function CompanySettings({ db, setDb }: { db: AppDB; setDb: SetDB
             <option value={1}>1.0×</option><option value={1.5}>1.5×</option><option value={2}>2.0×</option>
           </select>
         </label>
-        <label>Max OT per day (hours)<input type="number" min={0} step={0.5} value={s.maxOTPerDay} onChange={(e) => set('maxOTPerDay', Math.max(0, +e.target.value))} /></label>
+      
         <div className="logo">
           <span>Company logo</span>
           {s.logoBase64 && <img src={s.logoBase64} alt="Company logo" />}

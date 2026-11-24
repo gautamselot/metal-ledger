@@ -1,9 +1,0 @@
-export default function MetalLedgerLogo({ size = 36 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-label="MetalLedger">
-      <rect width="64" height="64" rx="12" fill="#1f2833" />
-      <path d="M12 46V18h8l12 16 12-16h8v28h-8V32L32 48 20 32v14z" fill="#e3e8ed" />
-      <rect x="12" y="50" width="40" height="4" rx="2" fill="#f97316" />
-    </svg>
-  );
-}

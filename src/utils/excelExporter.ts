@@ -5,6 +5,7 @@ import { downloadBlob } from './storage';
 
 const thin = { style: 'thin' as const, color: { argb: 'FF444444' } };
 const box = { top: thin, left: thin, bottom: thin, right: thin };
+const headFill = { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF1F2833' } };
 
 export async function exportMuster(db: AppDB, month: number, year: number) {
   const N = daysIn(month, year);
@@ -12,7 +13,7 @@ export async function exportMuster(db: AppDB, month: number, year: number) {
     .filter((r) => r.month === month && r.year === year)
     .map((r) => ({ r, e: db.employees.find((e) => e.id === r.employeeId) }))
     .filter((x): x is { r: (typeof x)['r']; e: NonNullable<(typeof x)['e']> } => !!x.e)
-    .sort((a, b) => a.e.empCode.localeCompare(b.e.empCode, undefined, { numeric: true }));
+    .sort((a, b) => (a.e.department ?? '').localeCompare(b.e.department ?? '') || a.e.empCode.localeCompare(b.e.empCode, undefined, { numeric: true }));
   if (!rows.length) throw new Error('Nothing to export. Generate payroll for this month first.');
 
   const s = db.settings;
@@ -30,13 +31,13 @@ export async function exportMuster(db: AppDB, month: number, year: number) {
   });
   ws.pageSetup.printTitlesRow = '4:4';
 
-  const fixed = ['Sr', 'Emp Code', 'Name', 'Daily Rate'];
-  const tail = ['Present', 'Absent', 'OT Hrs', 'OT Pay', 'Adjustment', 'Net Payable', 'Employee Signature'];
+  const fixed = ['Sr', 'Emp Code', 'Name', 'Plant', 'Daily Rate'];
+  const tail = ['Present', 'Absent', 'OT Pay', 'Net Payable', 'Employee Signature'];
   const total = fixed.length + N + tail.length;
   ws.columns = [
-    { width: 5 }, { width: 11 }, { width: 24 }, { width: 10 },
+    { width: 5 }, { width: 11 }, { width: 24 }, { width: 9 }, { width: 10 },
     ...Array.from({ length: N }, () => ({ width: 3.6 })),
-    { width: 8 }, { width: 8 }, { width: 8 }, { width: 10 }, { width: 11 }, { width: 13 }, { width: 34 },
+    { width: 8 }, { width: 8 }, { width: 10 }, { width: 13 }, { width: 34 },
   ];
 
   const title = (r: number, text: string, size: number, bold: boolean) => {
@@ -68,16 +69,16 @@ export async function exportMuster(db: AppDB, month: number, year: number) {
   head.height = 30;
   head.eachCell((c) => {
     c.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9 };
-    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F2833' } };
+    c.fill = headFill;
     c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
     c.border = box;
   });
 
   rows.forEach(({ r, e }, i) => {
     const row = ws.addRow([
-      i + 1, e.empCode, e.name, r.dailyRate,
+      i + 1, e.empCode, e.name, e.department ?? '', r.dailyRate,
       ...r.days.map((d) => d.status),
-      r.presentDays, r.absentDays, r.otHours, r.otPay, r.adjustment, r.targetPayout, '',
+      r.presentDays, r.absentDays, r.otPay, r.targetPayout, '',
     ]);
     row.height = 34;
     row.eachCell({ includeEmpty: true }, (c, col) => {
@@ -86,25 +87,42 @@ export async function exportMuster(db: AppDB, month: number, year: number) {
       c.alignment = { vertical: 'middle', horizontal: col === 3 ? 'left' : 'center' };
       const isDay = col > fixed.length && col <= fixed.length + N;
       if (isDay && c.value === 'A') c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDE2E0' } };
-      if (col >= total - 4 && col < total) c.numFmt = '#,##0.##';
+      if (col === 5 || col === total - 2 || col === total - 1) c.numFmt = '#,##0';
     });
     row.getCell(total - 1).font = { bold: true, size: 10 };
   });
 
   const t = ws.addRow(Array(total).fill(''));
   t.getCell(3).value = 'Total';
-  t.getCell(total - 3).value = rows.reduce((a, x) => a + x.r.otPay, 0);
-  t.getCell(total - 2).value = rows.reduce((a, x) => a + x.r.adjustment, 0);
+  t.getCell(total - 4).value = rows.reduce((a, x) => a + x.r.presentDays, 0);
+  t.getCell(total - 3).value = rows.reduce((a, x) => a + x.r.absentDays, 0);
+  t.getCell(total - 2).value = rows.reduce((a, x) => a + x.r.otPay, 0);
   t.getCell(total - 1).value = rows.reduce((a, x) => a + x.r.targetPayout, 0);
   t.height = 24;
   t.eachCell({ includeEmpty: true }, (c, col) => {
     c.font = { bold: true, size: 10 };
     c.border = box;
     c.alignment = { vertical: 'middle', horizontal: col === 3 ? 'left' : 'center' };
-    if (col >= total - 3 && col < total) c.numFmt = '#,##0';
+    if (col >= total - 2 && col < total) c.numFmt = '#,##0';
     if (col === total - 1) c.numFmt = '#,##0';
   });
 
+  const bs = wb.addWorksheet('Bank Details', { views: [{ state: 'frozen', ySplit: 1 }] });
+  bs.columns = [
+    { header: 'Sr', width: 5 }, { header: 'Emp Code', width: 11 }, { header: 'Name', width: 24 }, { header: 'Plant', width: 10 },
+    { header: 'Account No', width: 22 }, { header: 'IFSC', width: 14 }, { header: 'Aadhaar', width: 16 }, { header: 'Net Payable', width: 13 },
+  ];
+  bs.getRow(1).eachCell((c) => {
+    c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    c.fill = headFill;
+    c.border = box;
+  });
+  rows.forEach(({ r, e }, i) => {
+    const row = bs.addRow([i + 1, e.empCode, e.name, e.department ?? '', e.accNo ?? '', e.ifsc ?? '', e.aadhaar ?? '', r.targetPayout]);
+    row.eachCell({ includeEmpty: true }, (c) => { c.border = box; });
+    row.getCell(8).numFmt = '#,##0';
+  });
+
   const buf = await wb.xlsx.writeBuffer();
-  downloadBlob(`MetalLedger_${MONTHS[month - 1]}_${year}.xlsx`, new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  downloadBlob(`Payroll_${MONTHS[month - 1]}_${year}.xlsx`, new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
 }

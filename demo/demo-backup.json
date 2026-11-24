@@ -1,0 +1,281 @@
+{
+ "version": 1,
+ "settings": {
+  "shiftHours": 12,
+  "defaultOTMultiplier": 1,
+  "maxOTPerDay": 4
+ },
+ "employees": [
+  {
+   "id": "demo1",
+   "name": "Ramesh Kumar",
+   "unit": "Supa",
+   "designation": "Press Operator",
+   "department": "Extrusion",
+   "dailyRate": 850,
+   "active": true
+  },
+  {
+   "id": "demo2",
+   "name": "Suresh Patil",
+   "unit": "Supa",
+   "designation": "Die Setter",
+   "department": "Die Shop",
+   "dailyRate": 900,
+   "active": true
+  },
+  {
+   "id": "demo3",
+   "name": "Mahesh Jadhav",
+   "unit": "Supa",
+   "designation": "Operator",
+   "department": "Extrusion",
+   "dailyRate": 750,
+   "active": true
+  },
+  {
+   "id": "demo4",
+   "name": "Ganesh Shinde",
+   "unit": "Supa",
+   "designation": "Helper",
+   "department": "Extrusion",
+   "dailyRate": 520,
+   "active": true
+  },
+  {
+   "id": "demo5",
+   "name": "Dinesh Pawar",
+   "unit": "Supa",
+   "designation": "Cutter",
+   "department": "Cutting",
+   "dailyRate": 640,
+   "active": true
+  },
+  {
+   "id": "demo6",
+   "name": "Rajesh Gaikwad",
+   "unit": "Supa",
+   "designation": "Helper",
+   "department": "Cutting",
+   "dailyRate": 500,
+   "active": true
+  },
+  {
+   "id": "demo7",
+   "name": "Anil Kale",
+   "unit": "Supa",
+   "designation": "Packer",
+   "department": "Packing",
+   "dailyRate": 480,
+   "active": true
+  },
+  {
+   "id": "demo8",
+   "name": "Sunil More",
+   "unit": "Supa",
+   "designation": "Packer",
+   "department": "Packing",
+   "dailyRate": 480,
+   "active": true
+  },
+  {
+   "id": "demo9",
+   "name": "Vijay Deshmukh",
+   "unit": "Supa",
+   "designation": "Supervisor",
+   "department": "Extrusion",
+   "dailyRate": 1000,
+   "active": true
+  },
+  {
+   "id": "demo10",
+   "name": "Prakash Waghmare",
+   "unit": "Supa",
+   "designation": "Fitter",
+   "department": "Maintenance",
+   "dailyRate": 780,
+   "active": true
+  },
+  {
+   "id": "demo11",
+   "name": "Santosh Bhosale",
+   "unit": "Supa",
+   "designation": "Loader",
+   "department": "Packing",
+   "dailyRate": 460,
+   "active": true
+  },
+  {
+   "id": "demo12",
+   "name": "Amol Thorat",
+   "unit": "Supa",
+   "designation": "Operator",
+   "department": "Anodizing",
+   "dailyRate": 700,
+   "active": true
+  },
+  {
+   "id": "demo13",
+   "name": "Nitin Kharat",
+   "unit": "Supa",
+   "designation": "Helper",
+   "department": "Anodizing",
+   "dailyRate": 500,
+   "active": true
+  },
+  {
+   "id": "demo14",
+   "name": "Sachin Gawade",
+   "unit": "Supa",
+   "designation": "Electrician",
+   "department": "Maintenance",
+   "dailyRate": 820,
+   "active": true
+  },
+  {
+   "id": "demo15",
+   "name": "Deepak Salunke",
+   "unit": "Supa",
+   "designation": "Die Setter",
+   "department": "Die Shop",
+   "dailyRate": 880,
+   "active": true
+  },
+  {
+   "id": "demo16",
+   "name": "Rahul Chavan",
+   "unit": "Supa",
+   "designation": "Cutter",
+   "department": "Cutting",
+   "dailyRate": 650,
+   "active": true
+  },
+  {
+   "id": "demo17",
+   "name": "Manoj Kamble",
+   "unit": "Bhalwani",
+   "designation": "Helper",
+   "department": "Extrusion",
+   "dailyRate": 520,
+   "active": true
+  },
+  {
+   "id": "demo18",
+   "name": "Yogesh Sonawane",
+   "unit": "Bhalwani",
+   "designation": "Operator",
+   "department": "Extrusion",
+   "dailyRate": 740,
+   "active": true
+  },
+  {
+   "id": "demo19",
+   "name": "Kiran Mane",
+   "unit": "Bhalwani",
+   "designation": "Packer",
+   "department": "Packing",
+   "dailyRate": 480,
+   "active": true
+  },
+  {
+   "id": "demo20",
+   "name": "Pravin Nikam",
+   "unit": "Bhalwani",
+   "designation": "Loader",
+   "department": "Packing",
+   "dailyRate": 460,
+   "active": true
+  },
+  {
+   "id": "demo21",
+   "name": "Ashok Jagtap",
+   "unit": "Bhalwani",
+   "designation": "Welder",
+   "department": "Maintenance",
+   "dailyRate": 800,
+   "active": true
+  },
+  {
+   "id": "demo22",
+   "name": "Balu Ghule",
+   "unit": "Bhalwani",
+   "designation": "Helper",
+   "department": "Anodizing",
+   "dailyRate": 500,
+   "active": true
+  },
+  {
+   "id": "demo23",
+   "name": "Sandeep Wable",
+   "unit": "Bhalwani",
+   "designation": "Press Operator",
+   "department": "Extrusion",
+   "dailyRate": 830,
+   "active": true
+  },
+  {
+   "id": "demo24",
+   "name": "Rohit Kulkarni",
+   "unit": "Bhalwani",
+   "designation": "Quality Checker",
+   "department": "Cutting",
+   "dailyRate": 700,
+   "active": true
+  },
+  {
+   "id": "demo25",
+   "name": "Shankar Lokhande",
+   "unit": "Bhalwani",
+   "designation": "Helper",
+   "department": "Die Shop",
+   "dailyRate": 520,
+   "active": true
+  },
+  {
+   "id": "demo26",
+   "name": "Umesh Tambe",
+   "unit": "Bhalwani",
+   "designation": "Operator",
+   "department": "Anodizing",
+   "dailyRate": 720,
+   "active": true
+  },
+  {
+   "id": "demo27",
+   "name": "Narayan Bhagat",
+   "unit": "Bhalwani",
+   "designation": "Loader",
+   "department": "Extrusion",
+   "dailyRate": 470,
+   "active": true
+  },
+  {
+   "id": "demo28",
+   "name": "Tukaram Dhumal",
+   "unit": "Bhalwani",
+   "designation": "Helper",
+   "department": "Cutting",
+   "dailyRate": 500,
+   "active": true
+  },
+  {
+   "id": "demo29",
+   "name": "Bhaskar Raut",
+   "unit": "Bhalwani",
+   "designation": "Packer",
+   "department": "Packing",
+   "dailyRate": 480,
+   "active": true
+  },
+  {
+   "id": "demo30",
+   "name": "Vilas Pagar",
+   "unit": "Bhalwani",
+   "designation": "Fitter",
+   "department": "Maintenance",
+   "dailyRate": 760,
+   "active": true
+  }
+ ],
+ "payroll": []
+}

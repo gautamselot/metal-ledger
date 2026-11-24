@@ -8,15 +8,17 @@ export interface Employee {
   empCode: string;
   name: string;
   designation?: string;
-  department?: string;
+  department?: string; // Plant
   dailyRate: number;
+  accNo?: string;
+  ifsc?: string;
+  aadhaar?: string;
   active: boolean;
 }
 
 export interface DayEntry {
   day: number;
   status: DayStatus;
-  otHours: number;
 }
 
 export interface PayrollRecord {
@@ -31,7 +33,6 @@ export interface PayrollRecord {
   absentDays: number;
   otHours: number;
   otPay: number;
-  adjustment: number;
   days: DayEntry[];
   seed: number;
   locked?: boolean;
@@ -43,7 +44,6 @@ export interface AppSettings {
   logoBase64?: string;
   shiftHours: number;
   defaultOTMultiplier: OTMultiplier;
-  maxOTPerDay: number;
 }
 
 export interface AppDB {
