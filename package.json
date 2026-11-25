@@ -3,10 +3,15 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
+    "main": "electron/main.cjs",
+  "description": "Payroll muster roll app",
+  "author": "Payroll",
+    "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "app": "electron .",
+    "dist": "electron-builder --win"
   },
   "dependencies": {
     "exceljs": "^4.4.0",
@@ -20,7 +25,21 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "electron": "^45.5.0",
+    "electron-builder": "^26.18.0",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"
+  },
+    "build": {
+    "appId": "com.metalledger.payroll",
+    "productName": "Payroll",
+    "files": ["electron/**"],
+    "directories": { "output": "release" },
+    "win": { "target": "nsis" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "electron-winstaller@5.4.0": true
   }
 }
