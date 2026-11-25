@@ -1,0 +1,8 @@
+name = "payroll-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "payroll"
+database_id = "c8c3fac0-2127-42a1-983d-4ab568b384e4"

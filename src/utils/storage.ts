@@ -15,18 +15,26 @@ export const defaultDB = (): AppDB => ({
   payroll: [],
 });
 
-function normalize(d: AppDB): AppDB {
+export function normalize(d: AppDB): AppDB {
   const base = defaultDB();
   return {
     ...base,
     ...d,
     version: 2,
     settings: { ...base.settings, ...d.settings },
-        employees: d.employees.map((e) => {
+    employees: (d.employees ?? []).map((e) => {
       const { department, ...x } = e as typeof e & { department?: string };
-      return { ...x, unit: unitName(x.unit ?? department) };
+      return {
+        ...x,
+        id: x.id || uid(),
+        empCode: String(x.empCode ?? ''),
+        name: String(x.name ?? ''),
+        dailyRate: Number(x.dailyRate) || 0,
+        active: x.active ?? true,
+        unit: unitName(x.unit ?? department),
+      };
     }),
-    payroll: d.payroll.map((r) => {
+    payroll: (d.payroll ?? []).map((r) => {
       const { adjustment = 0, ...x } = r as PayrollRecord & { adjustment?: number };
       return { ...x, otPay: x.otPay + adjustment };
     }),
