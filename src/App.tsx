@@ -11,7 +11,7 @@ import PayrollGrid from './components/payroll/PayrollGrid';
 export default function App() {
   const [db, setDb] = useState<AppDB>(loadDB);
   const [tab, setTab] = useState<Tab>('payroll');
-  const [unit, setUnit] = useState<Unit>('Supa');
+  const [unit, setUnit] = useState<Unit>('Plant 1');
   const [period, setPeriod] = useState<Period>(() => ({ month: new Date().getMonth() + 1, year: new Date().getFullYear() }));
   useEffect(() => saveDB(db), [db]);
 
