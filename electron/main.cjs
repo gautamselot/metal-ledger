@@ -8,7 +8,7 @@ const OFFLINE = 'data:text/html,<body style="font:18px sans-serif;background:%23
 if (!app.requestSingleInstanceLock()) app.quit();
 
 app.whenReady().then(() => {
-  const win = new BrowserWindow({ width: 1400, height: 900, autoHideMenuBar: true, backgroundColor: '#1f2833' });
+   const win = new BrowserWindow({ width: 1400, height: 900, autoHideMenuBar: true, backgroundColor: '#1f2833', icon: path.join(__dirname, '../build/icon.ico') });
   win.maximize();
   win.loadURL(URL);
 

@@ -33,7 +33,7 @@
     "build": {
     "appId": "com.metalledger.payroll",
     "productName": "Payroll",
-    "files": ["electron/**"],
+    "files": ["electron/**", "build/icon.ico"],
     "directories": { "output": "release" },
     "win": { "target": "nsis" },
     "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
