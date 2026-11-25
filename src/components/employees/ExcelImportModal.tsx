@@ -1,105 +1,60 @@
-import { useMemo, useState } from 'react';
-import { FileUp, Pencil, Plus, Trash2 } from 'lucide-react';
-import type { AppDB, Employee, SetDB, Unit } from '@/types';
+import { useState } from 'react';
+import { FileUp, X } from 'lucide-react';
+import type { Employee, SetDB, Unit } from '@/types';
 import { uid } from '@/utils/storage';
-import ExcelImportModal from './ExcelImportModal';
+import { pick, readRows, saveSheet } from '@/utils/sheet';
 
-const blank = (unit: Unit): Employee => ({ id: '', empCode: '', name: '', designation: '', unit, dailyRate: 0, accNo: '', ifsc: '', aadhaar: '', active: true });
-const mask = (a?: string) => (a ? `•••• •••• ${a.slice(-4)}` : '');
-
-export default function EmployeeManager({ db, setDb, unit }: { db: AppDB; setDb: SetDB; unit: Unit }) {
-  const [q, setQ] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('active');
-  const [form, setForm] = useState<Employee | null>(null);
-  const [imp, setImp] = useState(false);
-
-  const inUnit = useMemo(() => db.employees.filter((e) => e.unit === unit), [db.employees, unit]);
-  const list = useMemo(
-    () =>
-      inUnit
-        .filter((e) => (filter === 'all' || (filter === 'active') === e.active) && (e.name + e.empCode).toLowerCase().includes(q.toLowerCase()))
-        .sort((a, b) => a.empCode.localeCompare(b.empCode, undefined, { numeric: true })),
-    [inUnit, q, filter]
-  );
-
-  const save = () => {
-    if (!form) return;
-    const f: Employee = {
-      ...form,
-      empCode: form.empCode.trim(),
-      name: form.name.trim(),
-      accNo: (form.accNo ?? '').replace(/\s/g, ''),
-      ifsc: (form.ifsc ?? '').trim().toUpperCase(),
-      aadhaar: (form.aadhaar ?? '').replace(/\s/g, ''),
-    };
-    if (!f.empCode || !f.name || !(f.dailyRate > 0)) return alert('Emp code, name and a daily rate above 0 are required.');
-    if (f.accNo && !/^\d{9,18}$/.test(f.accNo)) return alert('Account no must be 9 to 18 digits.');
-    if (f.ifsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(f.ifsc)) return alert('IFSC must be 11 characters, e.g. SBIN0001234.');
-    if (f.aadhaar && !/^\d{12}$/.test(f.aadhaar)) return alert('Aadhaar must be 12 digits.');
-    if (db.employees.some((e) => e.empCode === f.empCode && e.unit === f.unit && e.id !== f.id)) return alert(`This Emp code already exists in ${f.unit}.`);
-    setDb((d) => ({ ...d, employees: f.id ? d.employees.map((e) => (e.id === f.id ? f : e)) : [...d.employees, { ...f, id: uid() }] }));
-    setForm(null);
+export default function ExcelImportModal({ setDb, unit, onClose }: { setDb: SetDB; unit: Unit; onClose: () => void }) {
+  const [msg, setMsg] = useState('');
+  const load = async (f?: File) => {
+    if (!f) return;
+    try {
+      const rows = await readRows(f);
+      const list: Employee[] = rows
+        .map((r) => ({
+          id: uid(),
+          empCode: pick(r, 'empcode', 'employeecode', 'code', 'empid'),
+          name: pick(r, 'name', 'employeename', 'workername'),
+          designation: pick(r, 'designation'),
+          unit,
+          dailyRate: Number(pick(r, 'dailyrate', 'rate', 'wage')),
+          accNo: pick(r, 'accno', 'accountno', 'accountnumber').replace(/\s/g, ''),
+          ifsc: pick(r, 'ifsc').toUpperCase(),
+          aadhaar: pick(r, 'aadhaar', 'aadhar').replace(/\s/g, ''),
+          active: true,
+        }))
+        .filter((e) => e.empCode && e.name && e.dailyRate > 0);
+      if (!list.length) return setMsg('No valid rows. Needs Emp Code, Name, Daily Rate columns.');
+      let added = 0, updated = 0;
+      setDb((d) => {
+        const emps = [...d.employees];
+        list.forEach((n) => {
+          const i = emps.findIndex((e) => e.unit === unit && e.empCode === n.empCode);
+          if (i >= 0) { emps[i] = { ...n, id: emps[i].id }; updated++; } else { emps.push(n); added++; }
+        });
+        return { ...d, employees: emps };
+      });
+      setMsg(`Imported ${list.length} workers into ${unit}.`);
+    } catch {
+      setMsg('Could not read this file.');
+    }
   };
-
-  const remove = (e: Employee) => {
-    if (confirm(`Delete ${e.name} and all their payroll records?`))
-      setDb((d) => ({ ...d, employees: d.employees.filter((x) => x.id !== e.id), payroll: d.payroll.filter((p) => p.employeeId !== e.id) }));
-  };
-
-  const set = <K extends keyof Employee>(k: K, v: Employee[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
-
   return (
-    <section>
-      <div className="bar">
-        <h2>{unit} employees <span className="muted">{inUnit.length}</span></h2>
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="mh">
+          <h3>Import workers into {unit}</h3>
+          <button className="icon" onClick={onClose}><X size={18} /></button>
+        </div>
+        <p className="muted">Columns: Emp Code, Name, Designation, Daily Rate, Acc No, IFSC, Aadhaar. Existing codes are updated.</p>
         <div className="row">
-          <input placeholder="Search name or code" value={q} onChange={(e) => setQ(e.target.value)} />
-          <select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
-            <option value="active">Active</option><option value="inactive">Inactive</option><option value="all">All</option>
-          </select>
-          <button className="btn" onClick={() => setImp(true)}><FileUp size={16} /> Import Excel</button>
-          <button className="btn primary" onClick={() => setForm(blank(unit))}><Plus size={16} /> Add worker</button>
+          <label className="btn primary"><FileUp size={16} /> Choose file
+            <input type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => { load(e.target.files?.[0]); e.target.value = ''; }} />
+          </label>
+          <button className="link" onClick={() => saveSheet('workers-template.xlsx', [{ 'Emp Code': 'E001', Name: 'Ramesh Kumar', Designation: 'Operator', 'Daily Rate': 850, 'Acc No': '', IFSC: '', Aadhaar: '' }])}>Sample file</button>
         </div>
+        {msg && <p className="muted">{msg}</p>}
       </div>
-
-      {form && (
-        <div className="card form">
-          <label>Emp code<input value={form.empCode} onChange={(e) => set('empCode', e.target.value)} /></label>
-          <label>Name<input value={form.name} onChange={(e) => set('name', e.target.value)} /></label>
-          <label>Designation<input value={form.designation ?? ''} onChange={(e) => set('designation', e.target.value)} /></label>
-          <label>Daily rate (₹)<input type="number" min={0} value={form.dailyRate || ''} onChange={(e) => set('dailyRate', +e.target.value)} /></label>
-          <label>Account no<input inputMode="numeric" value={form.accNo ?? ''} onChange={(e) => set('accNo', e.target.value)} /></label>
-          <label>IFSC<input maxLength={11} value={form.ifsc ?? ''} onChange={(e) => set('ifsc', e.target.value.toUpperCase())} /></label>
-          <label>Aadhaar<input inputMode="numeric" maxLength={12} value={form.aadhaar ?? ''} onChange={(e) => set('aadhaar', e.target.value)} /></label>
-          <label className="chk"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> Active</label>
-          <div className="row end">
-            <button className="btn" onClick={() => setForm(null)}>Cancel</button>
-            <button className="btn primary" onClick={save}>Save worker</button>
-          </div>
-        </div>
-      )}
-
-      <div className="tablewrap">
-        <table>
-          <thead><tr><th>Code</th><th>Name</th><th>Designation</th><th className="num">Daily rate</th><th>Account no</th><th>IFSC</th><th>Aadhaar</th><th>Status</th><th /></tr></thead>
-          <tbody>
-            {list.map((e) => (
-              <tr key={e.id}>
-                <td>{e.empCode}</td><td>{e.name}</td><td>{e.designation}</td>
-                <td className="num">₹{e.dailyRate.toLocaleString('en-IN')}</td>
-                <td>{e.accNo}</td><td>{e.ifsc}</td><td>{mask(e.aadhaar)}</td>
-                <td><span className={e.active ? 'tag ok' : 'tag'}>{e.active ? 'Active' : 'Inactive'}</span></td>
-                <td className="acts">
-                  <button className="icon" title="Edit" onClick={() => setForm(e)}><Pencil size={16} /></button>
-                  <button className="icon" title="Delete" onClick={() => remove(e)}><Trash2 size={16} /></button>
-                </td>
-              </tr>
-            ))}
-            {!list.length && <tr><td colSpan={9} className="empty">No workers in {unit} yet. Add one or import an Excel sheet.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-      {imp && <ExcelImportModal setDb={setDb} unit={unit} onClose={() => setImp(false)} />}
-    </section>
+    </div>
   );
 }
