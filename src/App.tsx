@@ -6,7 +6,7 @@ import Header from './components/layout/Header';
 import type { Period } from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import type { Tab } from './components/layout/Sidebar';
-import EmployeeManager from './components/employees/EmployeeManager';
+import CompanySettings from './components/settings/CompanySettings';
 import PayrollGrid from './components/payroll/PayrollGrid';
 import ManageData from './components/manage/ManageData';
 
