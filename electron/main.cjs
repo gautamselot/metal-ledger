@@ -5,7 +5,7 @@ const path = require('path');
 const URL = 'https://mpayroll.vercel.app';
 const OFFLINE = 'data:text/html,<body style="font:18px sans-serif;background:%231f2833;color:%23fff;display:grid;place-items:center;height:100vh"><div>No internet. Retrying...</div></body>';
 
-if (!app.requestSingleInstanceLock()) app.quit();
+if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 
 app.whenReady().then(() => {
    const win = new BrowserWindow({ width: 1400, height: 900, autoHideMenuBar: true, backgroundColor: '#1f2833', icon: path.join(__dirname, '../build/icon.ico') });

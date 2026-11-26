@@ -111,7 +111,7 @@ export async function exportMuster(db: AppDB, month: number, year: number, unit:
   const bs = wb.addWorksheet('Bank Details', { views: [{ state: 'frozen', ySplit: 1 }] });
   bs.columns = [
     { header: 'Sr', width: 5 }, { header: 'Emp Code', width: 11 }, { header: 'Name', width: 24 }, { header: 'Plant', width: 10 },
-    { header: 'Account No', width: 22 }, { header: 'IFSC', width: 14 }, { header: 'Aadhaar', width: 16 }, { header: 'Net Payable', width: 13 },
+    { header: 'Account No', width: 22 }, { header: 'IFSC', width: 14 }, { header: 'Aadhaar', width: 16 }, { header: 'Net Payable', width: 13 }, ...(s.customCols ?? []).map((h) => ({ header: h, width: 16 })),
   ];
   bs.getRow(1).eachCell((c) => {
     c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -119,7 +119,7 @@ export async function exportMuster(db: AppDB, month: number, year: number, unit:
     c.border = box;
   });
   rows.forEach(({ r, e }, i) => {
-    const row = bs.addRow([i + 1, e.empCode, e.name, e.unit ?? '', e.accNo ?? '', e.ifsc ?? '', e.aadhaar ?? '', r.targetPayout]);
+    const row = bs.addRow([i + 1, e.empCode, e.name, e.unit ?? '', e.accNo ?? '', e.ifsc ?? '', e.aadhaar ?? '', r.targetPayout, ...(s.customCols ?? []).map((h) => e.custom?.[h] ?? '')]);
     row.eachCell({ includeEmpty: true }, (c) => { c.border = box; });
     row.getCell(8).numFmt = '#,##0';
   });

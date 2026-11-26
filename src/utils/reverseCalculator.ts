@@ -13,7 +13,7 @@ const rng = (s: number) => () => {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-const hrs = (pay: number, rate: number, mult: number, shift: number) => (rate > 0 ? Math.round((pay / ((rate / shift) * mult)) * 2) / 2 : 0);
+const hrs = (pay: number, rate: number, mult: number, shift: number) => (rate > 0 ? Math.floor((pay / ((rate / shift) * mult)) * 2) / 2 : 0);
 
 export interface CalcInput {
   id?: string;

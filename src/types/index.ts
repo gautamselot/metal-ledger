@@ -16,6 +16,7 @@ export interface Employee {
   ifsc?: string;
   aadhaar?: string;
   active: boolean;
+  custom?: Record<string, string>;
 }
 
 export interface DayEntry {
@@ -46,6 +47,9 @@ export interface AppSettings {
   logoBase64?: string;
   shiftHours: number;
   defaultOTMultiplier: OTMultiplier;
+  customCols?: string[];
+  colOrder?: string[];
+  colHidden?: string[];
 }
 
 export interface AppDB {

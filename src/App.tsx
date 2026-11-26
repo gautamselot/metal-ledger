@@ -8,7 +8,7 @@ import Sidebar from './components/layout/Sidebar';
 import type { Tab } from './components/layout/Sidebar';
 import EmployeeManager from './components/employees/EmployeeManager';
 import PayrollGrid from './components/payroll/PayrollGrid';
-import CompanySettings from './components/settings/CompanySettings';
+import ManageData from './components/manage/ManageData';
 
 type Sync = 'boot' | 'login' | 'error' | 'saved' | 'saving' | 'offline';
 
@@ -109,7 +109,7 @@ export default function App() {
         <Header period={period} setPeriod={setPeriod} db={db} setDb={setDb} />
         <main>
           {tab === 'payroll' && <PayrollGrid key={`${period.month}-${period.year}-${unit}`} db={db} setDb={setDb} period={period} unit={unit} />}
-          {tab === 'employees' && <EmployeeManager db={db} setDb={setDb} unit={unit} />}
+          {tab === 'manage' && <ManageData db={db} setDb={setDb} period={period} />}
           {tab === 'settings' && <CompanySettings db={db} setDb={setDb} />}
         </main>
       </div>

@@ -3,10 +3,11 @@ import { UNITS } from '@/types';
 import type { Employee, Unit } from '@/types';
 import PayrollLogo from './PayrollLogo';
 
-export type Tab = 'payroll' | 'employees' | 'settings';
+export type Tab = 'payroll' | 'employees' | 'settings' | 'manage';
 const items = [
   { id: 'payroll', label: 'Payroll', Icon: CalendarCheck },
   { id: 'employees', label: 'Employees', Icon: Users },
+  { id: 'manage', label: 'Manage', Icon: Settings },
   { id: 'settings', label: 'Settings', Icon: Settings },
 ] as const;
 
